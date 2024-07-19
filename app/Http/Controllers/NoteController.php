@@ -10,10 +10,12 @@ class NoteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $notes = Note::query()->orderBy('created_at', 'desc')->paginate(); // Get all notes and paginate them 15 is default
-        // dd($notes);
+        $notes = Note::query()
+            ->where('user_id', $request->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate();
         return view('note.index', ['notes' => $notes]);
     }
 
@@ -34,7 +36,7 @@ class NoteController extends Controller
             'note' => ['required', 'string'],
         ]);
 
-        $data['user_id'] = 1; // Hardcoded user_id for now
+        $data['user_id'] = $request->user()->id;
 
         $note = Note::create($data);
 
@@ -44,16 +46,22 @@ class NoteController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Note $note)
+    public function show(Request $request, Note $note)
     {
+        if ($note->user_id !== $request->user()->id) {
+            abort(403);
+        }
         return view('note.show', ['note' => $note]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Note $note)
+    public function edit(Request $request, Note $note)
     {
+        if ($note->user_id !== $request->user()->id) {
+            abort(403);
+        }
         return view('note.edit', ['note' => $note]);
     }
 
@@ -62,6 +70,10 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note)
     {
+        if ($note->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         $data = $request->validate([
             'note' => ['required', 'string'],
         ]);
@@ -74,8 +86,12 @@ class NoteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Note $note)
+    public function destroy(Request $request, Note $note)
     {
+        if ($note->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         $note->delete();
 
         return to_route('note.index')->with('message', 'Note was deleted successfully');
