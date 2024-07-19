@@ -8,13 +8,13 @@ use Illuminate\Http\Request;
 class NoteController extends Controller
 {
     /**
-     * Display a listing of the resources.
+     * Display a listing of the resource.
      */
     public function index()
     {
         $notes = Note::query()->orderBy('created_at', 'desc')->paginate(); // Get all notes and paginate them 15 is default
-        dd($notes);
-        return view('note.index');
+        // dd($notes);
+        return view('note.index', ['notes' => $notes]);
     }
 
     /**
@@ -30,7 +30,15 @@ class NoteController extends Controller
      */
     public function store(Request $request)
     {
-        return 'store';
+        $data = $request->validate([
+            'note' => ['required', 'string'],
+        ]);
+
+        $data['user_id'] = 1; // Hardcoded user_id for now
+
+        $note = Note::create($data);
+
+        return to_route('note.show', $note)->with('message', 'Note created successfully');
     }
 
     /**
@@ -38,7 +46,7 @@ class NoteController extends Controller
      */
     public function show(Note $note)
     {
-        return view('note.show');
+        return view('note.show', ['note' => $note]);
     }
 
     /**
@@ -46,7 +54,7 @@ class NoteController extends Controller
      */
     public function edit(Note $note)
     {
-        return view('note.edit');
+        return view('note.edit', ['note' => $note]);
     }
 
     /**
@@ -54,7 +62,13 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note)
     {
-        return 'update';
+        $data = $request->validate([
+            'note' => ['required', 'string'],
+        ]);
+
+        $note->update($data);
+
+        return to_route('note.show', $note)->with('message', 'Note was updated successfully');
     }
 
     /**
